@@ -42,6 +42,30 @@ app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024  # safety limit for uploads
 db = SQLAlchemy(app)
 
 # ============================================================
+# INIT DATABASE (Render + Local)
+# ============================================================
+def init_db():
+    try:
+        db.create_all()
+        # default setting
+        if not Setting.query.filter_by(key="allow_admin_signup").first():
+            s = Setting(key="allow_admin_signup", value="false")
+            db.session.add(s)
+            db.session.commit()
+        print("INIT_DB: OK")
+    except Exception as e:
+        print("INIT_DB ERROR:", e)
+
+@app.route("/init-db")
+def init_db_route():
+    try:
+        init_db()
+        return "Database initialized", 200
+    except Exception as e:
+        return f"Error: {e}", 500
+
+
+# ============================================================
 # DATABASE MODELS
 # ============================================================
 
