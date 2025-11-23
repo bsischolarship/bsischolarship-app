@@ -42,30 +42,6 @@ app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024  # safety limit for uploads
 db = SQLAlchemy(app)
 
 # ============================================================
-# INIT DATABASE (Render + Local)
-# ============================================================
-def init_db():
-    try:
-        db.create_all()
-        # default setting
-        if not Setting.query.filter_by(key="allow_admin_signup").first():
-            s = Setting(key="allow_admin_signup", value="false")
-            db.session.add(s)
-            db.session.commit()
-        print("INIT_DB: OK")
-    except Exception as e:
-        print("INIT_DB ERROR:", e)
-
-@app.route("/init-db")
-def init_db_route():
-    try:
-        init_db()
-        return "Database initialized", 200
-    except Exception as e:
-        return f"Error: {e}", 500
-
-
-# ============================================================
 # DATABASE MODELS
 # ============================================================
 
@@ -4702,23 +4678,26 @@ def chat_send(ticket_id):
 
 
 # ============================================================
-# INITIALIZE DATABASE AT STARTUP (RENDER + LOCAL)
+# MANUAL INIT ROUTE
 # ============================================================
+@app.route("/init-db")
+def init_db_route():
+    try:
+        init_db()
+        return "Database initialized", 200
+    except Exception as e:
+        return f"Error: {e}", 500
 
+# ============================================================
+# AUTO INIT DB
+# ============================================================
 with app.app_context():
     try:
         init_db()
     except Exception as e:
-        print("INIT_DB ERROR:", e)
+        print("INIT_DB AUTO ERROR:", e)
 
-
-# ============================================================
-# LOCAL DEVELOPMENT ENTRYPOINT
-# ============================================================
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
-
     with app.app_context():
         init_db()
     port = int(os.environ.get("PORT", 5000))
